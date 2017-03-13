@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="/home/beams/TMADDEN/EPICS/EPICS-Java-4.6.0/epics-core/epics-pvdatabase-4.2.2.jar"/>
+	<classpathentry kind="lib" path="/home/beams/TMADDEN/EPICS/EPICS-Java-4.6.0/epics-core/epics-pvaclient-4.2.2.jar"/>
+	<classpathentry kind="lib" path="/home/beams/TMADDEN/EPICS/EPICS-Java-4.6.0/epics-core/epics-pvaccess-5.0.2.jar"/>
+	<classpathentry kind="lib" path="/home/beams/TMADDEN/EPICS/EPICS-Java-4.6.0/epics-core/epics-ntypes-0.2.2.jar"/>
+	<classpathentry kind="lib" path="/home/beams/TMADDEN/EPICS/EPICS-Java-4.6.0/epics-core/epics-pvdata-6.0.2.jar"/>
+	<classpathentry kind="lib" path="/home/beams/TMADDEN/EPICS/EPICS-Java-4.6.0/epics-core/caj-1.1.15.jar"/>
+	<classpathentry kind="lib" path="/home/beams/TMADDEN/EPICS/EPICS-Java-4.6.0/epics-core/jca-2.3.6.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
