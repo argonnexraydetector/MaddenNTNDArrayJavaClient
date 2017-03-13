@@ -12,6 +12,7 @@ import org.epics.pvdata.pv.PVScalarArray;
 import org.epics.pvdata.pv.Status;
 import org.epics.pvdata.pv.Structure;
 import org.epics.pvdata.pv.LongArrayData;
+import org.epics.pvdata.copy.CreateRequest;
 import org.epics.pvdata.factory.BasePVUByteArray;
 import org.epics.pvdata.pv.ByteArrayData;
 import org.epics.pvdata.pv.Convert;
@@ -39,45 +40,16 @@ public class imageget {
 		PvaClient pva=PvaClient.get();
 		PvaClientChannel mychannel = pva.channel("13SIM1:Pva1:Image");
 		
-		// make an empty ntndarray, so I know the structure.
-		NTNDArrayBuilder ntab=NTNDArray.createBuilder();
-		NTNDArray nta = ntab.create();
-		
-		// can't I just ask the pv server what the structure is? why should I even be doing the above?
-		// Monitor needs to know what fields to monitor, and it defaults to timestamp, value, and something else,
-		// ignoring other fields. So when we monitor, we need tell. it to monituyr a complete NTNDArray.
-		// how do we do this? cant we just ask the server what the PV is, then monitor it?
 		
 		
 		
-		//
-		// Here we get lis of flields in the NTNDArray and then make a String
-		// I should not have to do this.....
 		
-		Structure pvsnt = nta.getPVStructure().getStructure();
-		String[] fns =pvsnt.getFieldNames();
-		String reqstr = "";
-		int slen=fns.length - 1;
-		int k;
-		for (k=0;k<slen;k++)
-		{
-			reqstr = reqstr + fns[k];
-			reqstr = reqstr +",";
+		PVStructure read_request = CreateRequest.create().createRequest("field()");
+		PvaClientMonitor pvamon=mychannel.createMonitor(read_request);
+
+	
 			
-				
-		}
-		reqstr = reqstr + fns[slen];
-		
-		
-						
-		//Now we can monitor all the fields. But this seems idiotuic.
-		PvaClientMonitor pvamon=mychannel.monitor(reqstr);
-		
-		//I should be able to do this:
-		//PvaClientMonitor pvamon=mychannel.createMonitor(nta.getPVStructure())
-		//the probolem is that when I monotir.start, the hosting IOC core dumps.
-		
-		//pvamon.connect();
+	
 		pvamon.start();
 		
 		
@@ -105,6 +77,7 @@ public class imageget {
 		// but only requesting the individual fields, it does not know its an NTNDArray.
 		
 		
+		//!! why does wrap return null? it should work?
 		NTNDArray myarray =NTNDArray.wrapUnsafe(pvs);
 		//The wrap unsafe leaves out most of the NTNDArray fields. but wrap() feils and returns null.
 		//
@@ -112,14 +85,11 @@ public class imageget {
 		//So I can get the data. How do I know the Union is holdibng bytes[], floats[] or ints[]?
 		// Not sure how to ask NTNDArray the data type
 		PVUnion pvu = myarray.getValue();
+			
 		
-		//PVStructureArray dims = myarray.getDimension();
+		//so how do I know of the data in pvu is short[] int[] or what? That
+		//info is stored somewhere...
 		
-		//org.epics.pvdata.pv.Field a = pvu.getField();
-		//PVInt uniqid = myarray.getUniqueId();
-		
-		
-		//PVStructureArray psa =myarray.getAttribute();
 	
 		System.out.println("got data " );
 
