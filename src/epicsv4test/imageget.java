@@ -31,8 +31,8 @@ import org.epics.pvdata.pv.PVInt;
 
 import org.epics.pvdata.pv.Field;
 import org.epics.pvdata.pv.Type;
- 
 
+import java.awt.image.BufferedImage;
 
 import org.epics.nt.*;
 
@@ -44,7 +44,17 @@ public class imageget {
 	public PvaClientMonitorData easydata;
 	public Convert converter;
 	
-	public imageget(String channame)
+	public boolean is_monrunning;
+	
+	public imageget()
+	{
+		
+		 is_monrunning=false;
+		
+	}
+	
+	
+	public void connectPVs(String channame)
 	{
 		 pva=PvaClient.get();
 		 mychannel = pva.channel(channame);
@@ -56,73 +66,129 @@ public class imageget {
 		 easydata = pvamon.getData();		
 		//Structure strct=easydata.getStructure();
 		 converter=ConvertFactory.getConvert();
-
+		
 	}
 	
+	
+	public void disconnectPVs()
+	{
+		
+		   pvamon.stop();
+	        pvamon.destroy();
+	            //read_request.destroy();
+	           mychannel.getChannel().destroy();
+	           mychannel.destroy();
+	           //pva.destroy();
+	           
+	}
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
 		System.out.println("Maddens test java get image");
 		
-		imageget mygetter = new imageget("13SIM1:Pva1:Image");
-		boolean isrunning = true;
+		imageget mygetter = new imageget();
+		mygetter.connectPVs("13SIM1:Pva1:Image");
 		
-		while(isrunning)
-		{
-			mygetter.pvamon.waitEvent(0);
-			mygetter.easydata = mygetter.pvamon.getData();		 		
-					
-			PVStructure pvs = mygetter.easydata.getPVStructure();				
-
-		//!! why does wrap return null? it should work?
-		NTNDArray myarray =NTNDArray.wrapUnsafe(pvs);
-		//The wrap unsafe leaves out most of the NTNDArray fields. but wrap() feils and returns null.
-		//	
-		
-		int uniqueid  =mygetter.getUniqueId(myarray);
-		int ndims = mygetter.getNumDims(myarray);
-		
-		// can bu size, binning, or whatever in dims
-		int dimsint[]=mygetter.getDimsInfo(myarray, "size");
-		
-		String dimstring = mygetter.getDimsString(myarray);
-		//returns like ushort[]		
-		
-		PVScalarArray imagedata = mygetter.extractImageData( myarray);
-
-		String arraytype = mygetter.getImageDataType( imagedata);
-		int arraylen = mygetter.getImageLength(imagedata);
-			
-				
-		int[] pixels = new int[arraylen];
-			
-		switch (arraytype)
-		{
-		case "short[]":
-		case "ushort[]":
-			//toIntArray(PvScalarrarray, offset, len, int[], tooffset);
-
-			mygetter.converter.toIntArray(imagedata, 0, arraylen, pixels, 0);
-		break;
-		}
-		System.out.println("got data " + arraytype 
-				+ "\n    len="+arraylen
-				+ "\n    uniqueid=" + uniqueid
-				+ "\n" + dimstring);
-
-
-
-		mygetter.pvamon.releaseEvent();
-		
-
-		
-		}//while true
 	
+		mygetter.is_monrunning=false;
+		//runONCE only
+		System.out.println("run mon loop 1st time");
+		mygetter.monitorLoop();
+		System.out.println("run mon loop 2nd time");
+		
+		mygetter.monitorLoop();
+		
+
+		
+		
 		System.out.println("Maddens test java end");
 
 	}
 
+	
+	public void monitorLoop()
+	{
+		
+		do 
+		{
+			pvamon.waitEvent(0);
+			easydata = pvamon.getData();		 		
+					
+			PVStructure pvs = easydata.getPVStructure();				
+
+			//!! why does wrap return null? it should work?
+			NTNDArray myarray =NTNDArray.wrapUnsafe(pvs);
+			//The wrap unsafe leaves out most of the NTNDArray fields. but wrap() feils and returns null.
+			//	
+			
+			int uniqueid  =getUniqueId(myarray);
+			int ndims = getNumDims(myarray);
+			
+			// can bu size, binning, or whatever in dims
+			int dimsint[]=getDimsInfo(myarray, "size");
+			
+			String dimstring = getDimsString(myarray);
+			//returns like ushort[]		
+			
+			PVScalarArray imagedata = extractImageData( myarray);
+	
+			String arraytype = getImageDataType( imagedata);
+			int arraylen = getImageLength(imagedata);
+				
+					
+			
+			System.out.println("got data " + arraytype 
+					+ "\n    len="+arraylen
+					+ "\n    uniqueid=" + uniqueid
+					+ "\n" + dimstring);
+	
+
+				
+			if (arraytype.equals("ubyte[]"))
+			{
+				short[] pixels = new short[arraylen];
+				converter.toShortArray(imagedata, 0, arraylen, pixels, 0);
+				System.out.println("Data = " + pixels[0] + pixels[1] + pixels[2] + pixels[3] + pixels[4] + pixels[5] + pixels[6] + pixels[7] );
+				
+				
+			}
+			else if (arraytype.equals("byte[]"))
+			{
+				byte[] pixels = new byte[arraylen];
+				converter.toByteArray(imagedata, 0, arraylen, pixels, 0);
+				System.out.println("Data = " + pixels[0] + pixels[1] + pixels[2] + pixels[3] + pixels[4] + pixels[5] + pixels[6] + pixels[7] );
+				
+			}			
+			else if (arraytype.equals("short[]"))
+			{
+				short[] pixels = new short[arraylen];
+				converter.toShortArray(imagedata, 0, arraylen, pixels, 0);
+				System.out.println("Data = " + pixels[0] + pixels[1] + pixels[2] + pixels[3] + pixels[4] + pixels[5] + pixels[6] + pixels[7] );
+				
+			}
+			else if (arraytype.equals("ushort[]"))
+			{
+				int[] pixels = new int[arraylen];
+				converter.toIntArray(imagedata, 0, arraylen, pixels, 0);
+				System.out.println("Data = " + pixels[0] + pixels[1] + pixels[2] + pixels[3] + pixels[4] + pixels[5] + pixels[6] + pixels[7] );
+				
+				
+			}
+			
+			
+		
+			
+				
+			
+			pvamon.releaseEvent();
+			
+
+		
+		} while(is_monrunning);
+			
+	}
+	
 	/**
 	 * return num of dimensions in the NDArray
 	 * @param myarray
