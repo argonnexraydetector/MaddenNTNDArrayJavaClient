@@ -9,6 +9,7 @@ import org.epics.pvaClient.PvaClientMonitorData;
 import org.epics.pvaccess.ClientFactory;
 import org.epics.pvaccess.client.ChannelProviderRegistry;
 import org.epics.pvdata.pv.PVScalarArray;
+import org.epics.pvdata.pv.PVString;
 import org.epics.pvdata.pv.Status;
 import org.epics.pvdata.pv.Structure;
 import org.epics.pvdata.pv.StructureArrayData;
@@ -25,12 +26,14 @@ import org.epics.pvdata.pv.PVStructureArray;
 import org.epics.pvdata.pv.PVUByteArray;
 import org.epics.pvdata.pv.PVUnion;
 import org.epics.pvdata.pv.PVByteArray;
+import org.epics.pvdata.pv.PVDouble;
 import org.epics.pvdata.pv.PVField;
 import org.epics.pvdata.pv.PVInt;
 
 
 import org.epics.pvdata.pv.Field;
 import org.epics.pvdata.pv.Type;
+import org.epics.pvdata.pv.Union;
 
 import java.awt.image.BufferedImage;
 
@@ -121,6 +124,18 @@ public class imageget {
 			NTNDArray myarray =NTNDArray.wrapUnsafe(pvs);
 			//The wrap unsafe leaves out most of the NTNDArray fields. but wrap() feils and returns null.
 			//	
+			PVStructureArray attribs = myarray.getAttribute();
+			
+			int nattribs= getNumAttributes(myarray);
+			
+			int colormode = 0;
+			
+			if (getAttrType( myarray,"ColorMode","value").equals("int"))			
+				 colormode = getAttrValInt( myarray,"ColorMode","value");
+			else
+				System.out.println("colormode not int!!");
+			
+		
 			
 			int uniqueid  =getUniqueId(myarray);
 			int ndims = getNumDims(myarray);
@@ -188,6 +203,16 @@ public class imageget {
 		} while(is_monrunning);
 			
 	}
+	
+	
+	public int getNumAttributes(NTNDArray myarray)
+	{
+		int nattribs=myarray.getAttribute().getLength();
+		return(nattribs);
+		
+	}
+
+	
 	
 	/**
 	 * return num of dimensions in the NDArray
@@ -260,6 +285,208 @@ public class imageget {
 		return(dimsint);
 	}
 
+	
+
+	public String getAttrType(NTNDArray myarray,String attrname,String attrfield) 
+	{
+		
+		
+		int nattr = this.getNumAttributes(myarray);
+		String attrval=new String("unknown");
+		
+		PVStructureArray attr1 = myarray.getAttribute();
+
+		StructureArrayData attr2=new StructureArrayData();
+		attr1.get(0,nattr,attr2);
+				for (int kk = 0;kk<nattr;kk++)
+		{
+			
+			PVField[] attrfields = attr2.data[kk].getPVFields();
+			for (int km = 0;km<attrfields.length;km++)
+			{
+				String dfn2=attrfields[km].getFieldName();
+				if (dfn2.equals("name"))
+				{
+					
+					String aname = converter.toString(((PVString)attrfields[km]));
+					
+					if (aname.equals(attrname))
+					{
+						for (int mm = 0;mm<attrfields.length;mm++)
+						{
+							String dfn3=attrfields[mm].getFieldName();
+							if (dfn3.equals(attrfield))
+							{
+								String t =  attrfields[mm].getField().getType().toString();
+								
+								if (t.equals("union"))
+								{
+									PVUnion apvu = (PVUnion)attrfields[mm];
+									PVField apvuf = apvu.get();
+									String s1 = apvuf.getField().getID();
+									
+									return(s1);
+								
+								}
+								
+								
+								
+								
+								
+								
+							}								
+						}
+					}
+					
+				}								
+			}
+		}
+		
+		//int nf = pvdim.getNumberFields();
+		
+		//String dimstring =pvdim.toString();
+		return(attrval);
+	}
+
+	
+
+	public int getAttrValInt(NTNDArray myarray,String attrname,String attrfield) 
+	{
+		
+		
+		int nattr = this.getNumAttributes(myarray);
+		int attrval=0;
+		
+		PVStructureArray attr1 = myarray.getAttribute();
+
+		StructureArrayData attr2=new StructureArrayData();
+		attr1.get(0,nattr,attr2);
+				for (int kk = 0;kk<nattr;kk++)
+		{
+			
+			PVField[] attrfields = attr2.data[kk].getPVFields();
+			for (int km = 0;km<attrfields.length;km++)
+			{
+				String dfn2=attrfields[km].getFieldName();
+				if (dfn2.equals("name"))
+				{
+					
+					String aname = converter.toString(((PVString)attrfields[km]));
+					
+					if (aname.equals(attrname))
+					{
+						for (int mm = 0;mm<attrfields.length;mm++)
+						{
+							String dfn3=attrfields[mm].getFieldName();
+							if (dfn3.equals(attrfield))
+							{
+								String t =  attrfields[mm].getField().getType().toString();
+								
+								if (t.equals("union"))
+								{
+									PVUnion apvu = (PVUnion)attrfields[mm];
+									PVField apvuf = apvu.get();
+									String s1 = apvuf.getField().getID();
+									
+									if (s1.equals("int"))
+									{
+										PVInt atri=(PVInt)apvuf;
+										attrval = atri.get();
+									}
+									else
+										System.out.println("Error- Wrong attr type");
+								
+								}
+								
+								
+								
+								
+								
+								return(attrval);
+							}								
+						}
+					}
+					
+				}								
+			}
+		}
+		
+		//int nf = pvdim.getNumberFields();
+		
+		//String dimstring =pvdim.toString();
+		return(attrval);
+	}
+
+	
+	public double getAttrValDouble(NTNDArray myarray,String attrname,String attrfield) 
+	{
+		
+		
+		int nattr = this.getNumAttributes(myarray);
+		double attrval=0.0;
+		
+		PVStructureArray attr1 = myarray.getAttribute();
+
+		StructureArrayData attr2=new StructureArrayData();
+		attr1.get(0,nattr,attr2);
+				for (int kk = 0;kk<nattr;kk++)
+		{
+			
+			PVField[] attrfields = attr2.data[kk].getPVFields();
+			for (int km = 0;km<attrfields.length;km++)
+			{
+				String dfn2=attrfields[km].getFieldName();
+				if (dfn2.equals("name"))
+				{
+					
+					String aname = converter.toString(((PVString)attrfields[km]));
+					
+					if (aname.equals(attrname))
+					{
+						for (int mm = 0;mm<attrfields.length;mm++)
+						{
+							String dfn3=attrfields[mm].getFieldName();
+							if (dfn3.equals(attrfield))
+							{
+								String t =  attrfields[mm].getField().getType().toString();
+								
+								if (t.equals("union"))
+								{
+									PVUnion apvu = (PVUnion)attrfields[mm];
+									PVField apvuf = apvu.get();
+									String s1 = apvuf.getField().getID();
+									
+									if (s1.equals("double"))
+									{
+										PVDouble atri=(PVDouble)apvuf;
+										attrval = atri.get();
+									}
+									else
+										System.out.println("Error- Wrong attr type");
+								
+								}
+								
+								
+								
+								
+								
+								return(attrval);
+							}								
+						}
+					}
+					
+				}								
+			}
+		}
+		
+		//int nf = pvdim.getNumberFields();
+		
+		//String dimstring =pvdim.toString();
+		return(attrval);
+	}
+
+	
+	
 	
 	String getImageDataType(PVScalarArray imagedata)
 	{
